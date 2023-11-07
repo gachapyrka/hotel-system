@@ -11,7 +11,7 @@
             <div class="row mt-4">
                 <div class="col-8 col-md-6 offset-2 offset-md-3">
                     <div class="form-floating">
-                        <input class="form-control" type="email" id="emailInput" required="true" name="username"/>
+                        <input class="form-control" type="email" id="emailInput" required="true" placeholder="a@a.com" name="username"/>
                         <label for="emailInput">Эл. почта</label>
                     </div>
                 </div>
@@ -20,8 +20,7 @@
             <div class="row mt-2">
                 <div class="col-8 col-md-6 offset-2 offset-md-3">
                     <div class="form-floating">
-                        <input class="form-control" type="password" id="passwordInput" required="true" name="password"/>
-                        <input type="hidden" name="_csrf" value="${_csrf.token}" />
+                        <input class="form-control" type="password" id="passwordInput" required="true" placeholder="a@a.com" name="password"/>
                         <label for="passwordInput">Пароль</label>
                     </div>
                 </div>
@@ -30,6 +29,7 @@
             <div class="row mt-3">
                 <div class="col-2 offset-5">
                     <input class="form-control btn btn-primary" type="submit" value="Вход"/>
+                    <input type="hidden" name="_csrf" value="${_csrf.token}" />
                 </div>
             </div>
         </form>

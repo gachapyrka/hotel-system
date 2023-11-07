@@ -1,6 +1,7 @@
 package com.example.hotel.domain;
 
 import lombok.*;
+import org.hibernate.validator.constraints.UniqueElements;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -20,6 +21,7 @@ public class Account implements UserDetails {
     @Setter(AccessLevel.PROTECTED)
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
     @NotBlank(message = "Логин не может быть пустым")
     private String username;
     @NotBlank(message = "Пароль не может быть пустым")

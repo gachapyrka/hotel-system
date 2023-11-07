@@ -5,7 +5,7 @@
     user = Session.SPRING_SECURITY_CONTEXT.authentication.principal
     username = user.getUsername()
     isAdmin = user.isAdmin()
-    isEmployee = user.isMarketer()>
+    isEmployee = user.isEmployee()>
 <#else>
     <#assign name = "unknown" isAdmin = false isEmployee = false>
 </#if>
