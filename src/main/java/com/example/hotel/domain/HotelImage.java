@@ -19,7 +19,7 @@ public class HotelImage {
 
     private String path;
 
-    @ManyToOne(optional = false, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
     @JoinColumn(name="hotel_id")
     private Hotel hotel;
 }

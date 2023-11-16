@@ -17,10 +17,10 @@ public class BorrowedRoom {
     @Setter(AccessLevel.PROTECTED)
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @ManyToOne(optional = false, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, fetch = FetchType.LAZY)
     @JoinColumn(name="room_id")
     private Room room;
-    @ManyToOne(optional = false, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, fetch = FetchType.LAZY)
     @JoinColumn(name="user_profile_id")
     private UserProfile userProfile;
     private Date startDate;

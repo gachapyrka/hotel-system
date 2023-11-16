@@ -19,7 +19,7 @@ public class RoomImage {
 
     private String path;
 
-    @ManyToOne(optional = false, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
     @JoinColumn(name="room_type_id")
     private RoomType roomType;
 

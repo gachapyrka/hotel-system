@@ -48,7 +48,7 @@
 
                         </td>
                         <td class="col-1">
-                            <form method="get" action="/admin/registration-keys/delete/${k.id}">
+                            <form method="post" action="/admin/registration-keys/delete/${k.id}">
                                 <input type="submit" class="btn btn-danger" value="Удалить">
                                 <input type="hidden" name="_csrf" value="${_csrf.token}" />
                             </form>
