@@ -22,12 +22,24 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">Мир-отель</a>
             <ul class="navbar-nav">
-                <#--<li class="nav-item">
-                    <a class="nav-link link-light" href="/info">Данные</a>
+                <li class="nav-item">
+                    <a class="nav-link link-light" href="/employee/profile">Профиль</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link link-light" href="/orders">Запросы</a>
-                </li>-->
+                    <a class="nav-link link-light" href="/employee/hotel">Отель</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link link-light" href="/employee/rooms">Номера</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link link-light" href="/employee/orders">Заявки</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link link-light" href="/employee/records">Записи</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link link-light" href="/employee/keys">Сотрудники</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link link-light" href="/logout">Выход</a>
                 </li>

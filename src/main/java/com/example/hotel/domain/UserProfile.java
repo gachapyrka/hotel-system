@@ -28,14 +28,14 @@ public class UserProfile {
     @NotBlank(message = "Телефон не может быть пустым")
     private String telephone;
 
-    @OneToOne(optional = false, cascade=CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(optional = false, cascade=CascadeType.DETACH, fetch = FetchType.LAZY)
     @JoinColumn (name="account_id")
     private Account account;
 
-    @OneToMany (mappedBy = "userProfile", fetch = FetchType.EAGER)
+    @OneToMany (orphanRemoval = false, mappedBy = "userProfile", fetch = FetchType.EAGER)
     private List<BorrowRequest> requests;
-    @OneToMany (mappedBy = "userProfile", fetch = FetchType.LAZY)
+    @OneToMany (orphanRemoval = false, mappedBy = "userProfile", fetch = FetchType.LAZY)
     private List<BorrowedRoom> borrowedRecords;
-    @OneToMany (mappedBy = "userProfile", fetch = FetchType.LAZY)
+    @OneToMany (orphanRemoval = false, mappedBy = "userProfile", fetch = FetchType.LAZY)
     private List<Feedback> comments;
 }
