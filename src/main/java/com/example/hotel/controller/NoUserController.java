@@ -1,19 +1,19 @@
 package com.example.hotel.controller;
 
 import com.example.hotel.domain.*;
-import com.example.hotel.repo.AccountRepo;
-import com.example.hotel.repo.EmployeeProfileRepo;
-import com.example.hotel.repo.HotelRepo;
-import com.example.hotel.repo.UserProfileRepo;
+import com.example.hotel.repo.*;
 import com.example.hotel.service.KeyGenerationService;
 import com.example.hotel.service.MailService;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -24,15 +24,17 @@ public class NoUserController {
     private final UserProfileRepo userProfileRepo;
     private final EmployeeProfileRepo employeeProfileRepo;
     private final HotelRepo hotelRepo;
+    private final RoomTypeRepo roomTypeRepo;
 
     public NoUserController(AccountRepo accountRepo, KeyGenerationService keyGenerationService, MailService mailService,
-                            UserProfileRepo userProfileRepo, EmployeeProfileRepo employeeProfileRepo, HotelRepo hotelRepo) {
+                            UserProfileRepo userProfileRepo, EmployeeProfileRepo employeeProfileRepo, HotelRepo hotelRepo, RoomTypeRepo roomTypeRepo) {
         this.accountRepo = accountRepo;
         this.keyGenerationService = keyGenerationService;
         this.mailService = mailService;
         this.userProfileRepo = userProfileRepo;
         this.employeeProfileRepo = employeeProfileRepo;
         this.hotelRepo = hotelRepo;
+        this.roomTypeRepo = roomTypeRepo;
     }
 
     @GetMapping("/")
@@ -75,7 +77,7 @@ public class NoUserController {
             return "registrationUser";
         }
 
-        String key = keyGenerationService.generateKey(username, Role.USER, false);
+        String key = keyGenerationService.generateKey(username, Role.USER, false, true);
         String title = "Код подтверждения.";
         String text = "Ваш код подтверждения: " + key + "\n";
         text += "Никому не сообщайте и не передавайте данный код во избежание кражи ваших личных данных!";
@@ -183,7 +185,7 @@ public class NoUserController {
         }
 
         //Add new employee to already created hotel
-        uname = keyGenerationService.matchKey(key, username, Role.EMPLOYEE, true);
+        uname = keyGenerationService.matchReferalKey(key, Role.EMPLOYEE);
         if(uname != null){
             Account account = accountRepo.findByUsername(uname);
 
@@ -223,5 +225,95 @@ public class NoUserController {
 
         model.put("errorKey", "Неверный реферальный код");
         return "registrationEmployee";
+    }
+
+    @GetMapping("/all/hotels")
+    public String hotelsGet(@RequestParam(name = "name", required = false) String name,
+                            @RequestParam(name = "minCost", required = false) Integer minCost,
+                            @RequestParam(name = "maxCost", required = false) Integer maxCost,
+                               Map<String, Object> model) {
+
+       Iterable<Hotel> hotels = hotelRepo.findAll();
+
+       List<Hotel> found = new ArrayList<>();
+       for(Hotel hotel : hotels){
+           if(name != null && !hotel.getName().contains(name))
+               continue;
+
+           if(minCost != null && minCost > hotel.getMaxCost())
+               continue;
+
+           if(maxCost != null && maxCost < hotel.getMinCost())
+               continue;
+
+           found.add(hotel);
+       }
+
+       if(!found.isEmpty())
+            model.put("hotels", found);
+       if(name != null)
+            model.put("name", name);
+        if(minCost != null)
+            model.put("minCost", minCost);
+        if(maxCost != null)
+            model.put("maxCost", maxCost);
+
+        return "common/hotels";
+    }
+
+    @GetMapping("/all/hotel/{id}")
+    public String hotelGet(@PathVariable long id, Map<String, Object> model) {
+
+        Hotel hotel = hotelRepo.findById(id).get();
+
+        Hibernate.initialize(hotel.getRoomTypes());
+        Hibernate.initialize(hotel.getComments());
+        Hibernate.initialize(hotel.getImages());
+
+        model.put("hotel", hotel);
+
+        if(!hotel.getImages().isEmpty())
+            model.put("hotelImages", hotel.getImages());
+
+        if(!hotel.getDescription().isEmpty())
+            model.put("description", hotel.getDescription());
+
+        if(!hotel.getRoomTypes().isEmpty()){
+            for(RoomType roomType: hotel.getRoomTypes()){
+                Hibernate.initialize(roomType.getRooms());
+            }
+            model.put("roomTypes", hotel.getRoomTypes());
+        }
+
+        if(!hotel.getComments().isEmpty()){
+            for(Feedback f: hotel.getComments()){
+                Hibernate.initialize(f.getUserProfile());
+            }
+            model.put("comments", hotel.getComments());
+        }
+
+        return "common/hotel";
+    }
+
+    @GetMapping("/all/room-type/{id}")
+    public String roomTypeGet(@PathVariable long id, Map<String, Object> model) {
+        RoomType roomType = roomTypeRepo.findById(id).get();
+
+        Hibernate.initialize(roomType.getHotel());
+        model.put("hotelId", roomType.getHotel().getId());
+        model.put("roomType", roomType);
+
+        Hibernate.initialize(roomType.getRoomImages());
+        if(!roomType.getRoomImages().isEmpty())
+            model.put("roomImages", roomType.getRoomImages());
+
+        if(!roomType.getDescription().isEmpty())
+            model.put("description", roomType.getDescription());
+
+        Hibernate.initialize(roomType.getRooms());
+        Hibernate.initialize(roomType.getRequests());
+        Hibernate.initialize(roomType.getHotel());
+
+        return "common/roomType";
     }
 }

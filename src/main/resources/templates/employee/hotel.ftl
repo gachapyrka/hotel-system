@@ -19,7 +19,7 @@
                     <h2>Отель ${hotel.name}</h2>
                 </div>
                 <div class="row mt-2">
-                    <h6>От ${minCost} до ${maxCost} руб./сут.</h6>
+                    <h6>От ${hotel.getMinCost()} до ${hotel.getMaxCost()} руб./сут.</h6>
                 </div>
                 <div class="mt-2">
                     <a class="btn btn-primary" href="/employee/hotel/edit">Редактировать</a>
@@ -103,7 +103,23 @@
         <div class="row mt-5 mb-5">
             <h5>Отзывы:</h5>
             <#if comments??>
-
+                <#list comments as c>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <div class="border border-primary-subtle rounded-3">
+                                <div class="row justify-content-start">
+                                    <div style="margin-left: 2%">
+                                        <p class="fw-bold">${c.title}</p>
+                                        <p>${c.text}</p>
+                                    </div>
+                                </div>
+                                <div class="text-end fw-italic">
+                                    ${c.userProfile.credentials} - ${c.getLocalCreationDate()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </#list>
             <#else>
                 <h6 class="text-center">Пока что нет ни одного отзыва</h6>
             </#if>

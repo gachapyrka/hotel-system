@@ -44,3 +44,24 @@
         </button>
     </div>
 </#macro>
+
+<#macro noImageCommonCarousel>
+    <div id="carousel" class="carousel slide">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img src="/img/common.jpg" class="d-block w-100" height="400">
+            </div>
+            <div class="carousel-item">
+                <img src="/img/common.jpg" class="d-block w-100" height="400">
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Предыдущий</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Следующий</span>
+        </button>
+    </div>
+</#macro>

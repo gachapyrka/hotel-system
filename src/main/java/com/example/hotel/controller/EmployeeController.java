@@ -2,20 +2,22 @@ package com.example.hotel.controller;
 
 import com.example.hotel.domain.*;
 import com.example.hotel.repo.*;
-import com.itextpdf.text.RomanList;
+import com.example.hotel.service.BorrowedRoomService;
+import com.example.hotel.service.KeyGenerationService;
+import com.example.hotel.service.MailService;
+import com.example.hotel.service.QRGenerationService;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Controller
 @RequestMapping("/employee")
@@ -29,17 +31,31 @@ public class EmployeeController {
     private final RoomTypeRepo roomTypeRepo;
     private final RoomImageRepo roomImageRepo;
     private final RoomRepo roomRepo;
+    private final BorrowRequestRepo borrowRequestRepo;
+    private final BorrowedRoomRepo borrowedRoomRepo;
+    private final MailService mailService;
+    private final QRGenerationService qrGenerationService;
+    private final BorrowedRoomService borrowedRoomService;
+    private final RegistrationKeyRepo registrationKeyRepo;
+    private final KeyGenerationService keyGenerationService;
 
     public EmployeeController(EmployeeProfileRepo employeeProfileRepo, HotelRepo hotelRepo, HotelImageRepo hotelImageRepo,
                               RoomTypeRepo roomTypeRepo,
                               RoomImageRepo roomImageRepo,
-                              RoomRepo roomRepo) {
+                              RoomRepo roomRepo, BorrowRequestRepo borrowRequestRepo, BorrowedRoomRepo borrowedRoomRepo, MailService mailService, QRGenerationService qrGenerationService, BorrowedRoomService borrowedRoomService, RegistrationKeyRepo registrationKeyRepo, KeyGenerationService keyGenerationService) {
         this.employeeProfileRepo = employeeProfileRepo;
         this.hotelRepo = hotelRepo;
         this.hotelImageRepo = hotelImageRepo;
         this.roomTypeRepo = roomTypeRepo;
         this.roomImageRepo = roomImageRepo;
         this.roomRepo = roomRepo;
+        this.borrowRequestRepo = borrowRequestRepo;
+        this.borrowedRoomRepo = borrowedRoomRepo;
+        this.mailService = mailService;
+        this.qrGenerationService = qrGenerationService;
+        this.borrowedRoomService = borrowedRoomService;
+        this.registrationKeyRepo = registrationKeyRepo;
+        this.keyGenerationService = keyGenerationService;
     }
 
     @GetMapping("/hotel")
@@ -77,11 +93,13 @@ public class EmployeeController {
             model.put("roomTypes", profile.getHotel().getRoomTypes());
         }
 
-        if(!profile.getHotel().getComments().isEmpty())
+        if(!profile.getHotel().getComments().isEmpty()){
+            for(Feedback f: profile.getHotel().getComments()){
+                Hibernate.initialize(f.getUserProfile());
+            }
             model.put("comments", profile.getHotel().getComments());
+        }
 
-        model.put("minCost", minCostPerDay);
-        model.put("maxCost", maxCostPerDay);
 
         return "employee/hotel";
     }
@@ -366,5 +384,183 @@ public class EmployeeController {
         roomRepo.deleteById(id);
 
         return "redirect:/employee/rooms";
+    }
+
+    @GetMapping("/orders")
+    public String ordersGet(@AuthenticationPrincipal Account account,
+                            @RequestParam(name = "search", required = false) String search,
+                            Map<String, Object> model) {
+        EmployeeProfile profile = employeeProfileRepo.findByAccount_Id(account.getId());
+        Hibernate.initialize(profile.getHotel());
+
+        List<BorrowRequest> requests = borrowRequestRepo.findByRoomType_Hotel_Id(profile.getHotel().getId());
+        List<BorrowRequest> filtered = new ArrayList<>();
+        for(BorrowRequest request: requests){
+            Hibernate.initialize(request.getUserProfile());
+            Hibernate.initialize(request.getUserProfile().getAccount());
+            Hibernate.initialize(request.getRoomType());
+
+            if(search != null){
+                if(!(request.getDescription().contains(search) ||
+                   request.getUserProfile().getCredentials().contains(search)||
+                   request.getUserProfile().getTelephone().contains(search)||
+                   request.getUserProfile().getAccount().getUsername().contains(search)||
+                   request.getRoomType().getName().contains(search)))
+                    continue;
+            }
+
+            filtered.add(request);
+        }
+
+        if(!filtered.isEmpty())
+            model.put("orders", filtered);
+
+        if(search != null)
+            model.put("search", search);
+
+        return "employee/orders";
+    }
+
+    @GetMapping("/order/{id}/submit")
+    public String orderSubmitGet(@PathVariable long id, Map<String, Object> model) {
+        BorrowRequest request = borrowRequestRepo.findById(id).get();
+        Hibernate.initialize(request.getRoomType());
+        Hibernate.initialize(request.getRoomType().getRooms());
+
+        List<Room> rooms = new ArrayList<>();
+        for(Room room : request.getRoomType().getRooms()){
+            if(!room.isLocked())
+                rooms.add(room);
+        }
+        model.put("rooms", rooms);
+        model.put("orderId", id);
+
+        return "employee/submit";
+    }
+
+    @PostMapping("/order/{id}/submit")
+    public String orderSubmitPost(@PathVariable long id, @RequestParam long roomId, Map<String, Object> model){
+        BorrowRequest request = borrowRequestRepo.findById(id).get();
+        Hibernate.initialize(request.getUserProfile());
+        Hibernate.initialize(request.getUserProfile().getAccount());
+        Hibernate.initialize(request.getRoomType());
+        Hibernate.initialize(request.getRoomType().getHotel());
+        Hotel hotel = request.getRoomType().getHotel();
+
+        Room room = roomRepo.findById(roomId).get();
+
+        BorrowedRoom record = new BorrowedRoom();
+        record.setRoom(room);
+        record.setStartDate(request.getStartDate());
+        record.setEndDate(request.getEndDate());
+        record.setUserProfile(request.getUserProfile());
+        record.setStatus(Status.ACTIVE);
+
+        borrowedRoomRepo.save(record);
+        borrowRequestRepo.deleteById(id);
+
+        String title = "Ваш билет в отеле " + hotel.getName();
+        String text = "Для Вас была одобрена бронь номера \"" + room.getNumber() + "\".\n\n";
+        text += "Воспользуйтесь QR-кодом, приложенным к сообщению для работы с терминалами дверей и лифтов отеля. За дополнительными инструкциями обращайтесь к сотрудникам.";
+        String qr = qrGenerationService.createQR(qrGenerationService.createContent(record), request.getId());
+
+        mailService.send(title, text, request.getUserProfile().getAccount().getUsername(), qr);
+
+        return "redirect:/employee/records";
+    }
+
+    @GetMapping("/records")
+    public String recordsGet(@AuthenticationPrincipal Account account,
+                            @RequestParam(name = "search", required = false) String search,
+                            Map<String, Object> model) {
+        EmployeeProfile profile = employeeProfileRepo.findByAccount_Id(account.getId());
+        Hibernate.initialize(profile.getHotel());
+
+        List<BorrowedRoom> filtered = borrowedRoomService.getRecordsEmployeeByStatus(profile.getHotel(), search, Status.ACTIVE);
+
+        if(!filtered.isEmpty())
+            model.put("records", filtered);
+
+        if(search != null)
+            model.put("search", search);
+
+        return "employee/records";
+    }
+
+    @PostMapping("/record/{id}")
+    public String recordUpdateStatusPost(@PathVariable long id, @RequestParam int status, Map<String, Object> model){
+       BorrowedRoom record = borrowedRoomRepo.findById(id).get();
+       Status stat = Status.ACTIVE;
+       switch (status)
+       {
+           case 0:{
+               stat = Status.ACTIVE;
+               break;
+           }
+           case 1:{
+               stat = Status.CANCELLED;
+               break;
+           }
+           case 2:{
+               stat = Status.ENDED;
+               break;
+           }
+       }
+       record.setStatus(stat);
+       record.setEndDate(new Date());
+       borrowedRoomRepo.save(record);
+
+        return "redirect:/employee/records";
+    }
+
+    @GetMapping("/history")
+    public String historyGet(@AuthenticationPrincipal Account account,
+                             @RequestParam(name = "search", required = false) String search,
+                             Map<String, Object> model) {
+        EmployeeProfile profile = employeeProfileRepo.findByAccount_Id(account.getId());
+        Hibernate.initialize(profile.getHotel());
+
+        List<BorrowedRoom> filtered = borrowedRoomService.getRecordsEmployeeByStatusNot(profile.getHotel(), search, Status.ACTIVE);
+
+        if(!filtered.isEmpty())
+            model.put("records", filtered);
+
+        if(search != null)
+            model.put("search", search);
+
+        return "employee/history";
+    }
+
+    @GetMapping("/keys")
+    public String referalKeysGet(@AuthenticationPrincipal Account account,
+                                 Map<String, Object> model) {
+        List<RegistrationKey> regKeys =  registrationKeyRepo.findByUsernameContainingAndRoleAndIsReferal(account.getUsername(), Role.EMPLOYEE, true);
+
+        model.put("regKeys", regKeys);
+
+        return "employee/registrationKeys";
+    }
+
+    @PostMapping("/keys/regenerate/{id}")
+    public String regenerateKeyPost(@PathVariable long id, Model model){
+        keyGenerationService.regenerateKey(id);
+
+        return "redirect:/employee/keys";
+    }
+
+    @PostMapping("/keys/delete/{id}")
+    public String deleteKeyPost(@PathVariable long id, Model model){
+        RegistrationKey registrationKey = registrationKeyRepo.findById(id).get();
+
+        registrationKeyRepo.deleteById(registrationKey.getId());
+
+        return "redirect:/employee/keys";
+    }
+
+    @PostMapping("/keys/generate")
+    public String generateKeyPost(@AuthenticationPrincipal Account account, Model model){
+        keyGenerationService.generateKey(account.getUsername(), Role.EMPLOYEE, true, false);
+
+        return "redirect:/employee/keys";
     }
 }
