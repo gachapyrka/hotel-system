@@ -1,6 +1,7 @@
 package com.example.hotel.domain;
 
 import lombok.*;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -34,4 +35,59 @@ public class Hotel {
     private List<RoomType> roomTypes;
     @OneToMany (orphanRemoval = false, mappedBy = "hotel", fetch = FetchType.LAZY)
     private List<Feedback> comments;
+
+    public Double getMinCost(){
+        Hibernate.initialize(roomTypes);
+        Double min = 0.;
+
+        for(RoomType type: roomTypes){
+            if(min == 0 || min > type.getCostPerDay())
+                min = type.getCostPerDay();
+        }
+
+        return min;
+    }
+
+    public Double getMaxCost(){
+        Hibernate.initialize(roomTypes);
+        Double max = 0.;
+
+        for(RoomType type: roomTypes){
+            if(max < type.getCostPerDay())
+                max = type.getCostPerDay();
+        }
+
+        return max;
+    }
+
+    public HotelImage getFirstImage(){
+        Hibernate.initialize(images);
+
+        if(!images.isEmpty())
+            return images.get(0);
+
+        return null;
+    }
+
+    public int getRoomsCount(){
+        Hibernate.initialize(roomTypes);
+        int count = 0;
+
+        for(RoomType type: roomTypes){
+            count += type.getRoomsCount();
+        }
+
+        return count;
+    }
+
+    public int getFreeRoomsCount(){
+        Hibernate.initialize(roomTypes);
+        int count = 0;
+
+        for(RoomType type: roomTypes){
+            count += type.getFreeRoomsCount();
+        }
+
+        return count;
+    }
 }

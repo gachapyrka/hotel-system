@@ -53,12 +53,18 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">Мир-отель</a>
             <ul class="navbar-nav">
-                <#--<li class="nav-item">
-                    <a class="nav-link link-light" href="/orders-view">Запросы</a>
+                <li class="nav-item">
+                    <a class="nav-link link-light" href="/all/hotels">Отели</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link link-light" href="/profile">Профиль</a>
-                </li>-->
+                    <a class="nav-link link-light" href="/user/orders">Заявки</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link link-light" href="/user/records">Мои номера</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link link-light" href="/user/history">История</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link link-light" href="/logout">Выход</a>
                 </li>
@@ -72,6 +78,9 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">Мир-отель</a>
             <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link link-light" href="/all/hotels">Отели</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link link-light" href="/login">Вход</a>
                 </li>

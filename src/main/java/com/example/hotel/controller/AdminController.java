@@ -158,7 +158,7 @@ public class AdminController {
     public String regenerateKeyPost(@PathVariable long id, Model model){
         RegistrationKey registrationKey = registrationKeyRepo.findById(id).get();
 
-        String key = keyGenerationService.generateKey(registrationKey.getUsername(), Role.EMPLOYEE, false);
+        String key = keyGenerationService.generateKey(registrationKey.getUsername(), Role.EMPLOYEE, false, true);
 
         String title = "Обновленный реферальный код регистрации отеля.";
         String text = "Ваш реферальный код для регистрации отеля был обновлен. Для регистрации введите его в соответствующее поле.\n" +
@@ -185,7 +185,7 @@ public class AdminController {
         regKey.setReferal(false);
         regKey.setUsername(username);
         regKey.setRole(Role.EMPLOYEE);
-        regKey.setKey(keyGenerationService.generateKey(username, Role.EMPLOYEE, false));
+        regKey.setKey(keyGenerationService.generateKey(username, Role.EMPLOYEE, false, false));
 
         String title = "Реферальный код регистрации отеля.";
         String text = "Вам выдан реферальный код для создания аккаунта отеля. Для регистрации введите его в соответствующее поле.\n" +

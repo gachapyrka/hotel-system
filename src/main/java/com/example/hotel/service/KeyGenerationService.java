@@ -30,19 +30,30 @@ public class KeyGenerationService {
 
         return str;
     }
-    public String generateKey(String username, Role role, boolean isReferal){
+
+    public String regenerateKey(long id){
+        RegistrationKey key = registrationKeyRepo.findById(id).get();
+        String k = getKey();
+        key.setKey(k);
+        registrationKeyRepo.save(key);
+
+        return k;
+    }
+    public String generateKey(String username, Role role, boolean isReferal, boolean checkExisting){
         String key = getKey();
         List<RegistrationKey> registrationKeys = registrationKeyRepo.findByUsername(username);
 
         boolean isFound = false;
-        for(RegistrationKey registrationKey : registrationKeys){
-            if(registrationKey.getUsername().equals(username) &&
-                       registrationKey.getRole().equals(role) &&
-                       registrationKey.isReferal() == isReferal){
-                isFound = true;
-                registrationKey.setKey(key);
-                registrationKeyRepo.save(registrationKey);
-                break;
+        if(checkExisting){
+            for(RegistrationKey registrationKey : registrationKeys){
+                if(registrationKey.getUsername().equals(username) &&
+                        registrationKey.getRole().equals(role) &&
+                        registrationKey.isReferal() == isReferal){
+                    isFound = true;
+                    registrationKey.setKey(key);
+                    registrationKeyRepo.save(registrationKey);
+                    break;
+                }
             }
         }
 
@@ -64,6 +75,18 @@ public class KeyGenerationService {
                        registrationKey.getRole().equals(role) &&
                        registrationKey.isReferal() == isReferal &&
                         registrationKey.getKey().equals(key)){
+                registrationKeyRepo.deleteById(registrationKey.getId());
+                return registrationKey.getUsername();
+            }
+        }
+
+        return null;
+    }
+
+    public String matchReferalKey(String key, Role role){
+        List<RegistrationKey> registrationKeys = registrationKeyRepo.findByRoleAndIsReferal(role, true);
+        for(RegistrationKey registrationKey : registrationKeys){
+            if(registrationKey.getKey().equals(key)){
                 registrationKeyRepo.deleteById(registrationKey.getId());
                 return registrationKey.getUsername();
             }

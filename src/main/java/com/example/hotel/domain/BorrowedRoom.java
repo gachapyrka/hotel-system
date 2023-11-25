@@ -3,6 +3,7 @@ package com.example.hotel.domain;
 import lombok.*;
 
 import javax.persistence.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Entity
@@ -27,4 +28,18 @@ public class BorrowedRoom {
     private Date endDate;
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    public String getLocalStartDate(){
+        SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy");
+        return fmt.format(startDate);
+    }
+
+    public String getLocalEndDate(){
+        SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy");
+        return fmt.format(endDate);
+    }
+
+    public boolean isCancelled(){
+        return status == Status.CANCELLED;
+    }
 }

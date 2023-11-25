@@ -78,8 +78,8 @@
                 </div>
                 <div class="row align-items-center justify-content-start mt-2">
                     <div class="col-auto">
-                        <select class="form-select" name="roomTypeId" required aria-label="Тип номера">
-                            <option selected disabled>Выберите тип номера</option>
+                        <select class="form-select" name="roomTypeId" id="roomTypeInput" required aria-label="Тип номера">
+                            <option selected disabled value="-1">Выберите тип номера</option>
                             <#list roomTypes as r>
                                 <option value="${r.id}">${r.name}</option>
                             </#list>
@@ -129,6 +129,15 @@
                 document.getElementById("nameInput").classList.remove("is-invalid");
                 document.getElementById("nameInputLabel").textContent  = "Номер";
                 document.getElementById("nameInputLabel").classList.remove("text-danger");
+            }
+
+            var id = document.getElementById("roomTypeInput").value;
+            if(id==-1){
+                document.getElementById("roomTypeInput").classList.add("is-invalid");
+                return;
+            }
+            else{
+                document.getElementById("roomTypeInput").classList.remove("is-invalid");
             }
 
             document.getElementById("addRoomForm").submit();

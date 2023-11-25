@@ -31,11 +31,11 @@ public class RoomType {
     @ManyToOne(optional = false, cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
     @JoinColumn(name="hotel_id")
     private Hotel hotel;
-    @OneToMany (orphanRemoval = false, mappedBy = "roomType", fetch = FetchType.EAGER)
+    @OneToMany (orphanRemoval = true, mappedBy = "roomType", fetch = FetchType.EAGER)
     private List<RoomImage> roomImages;
-    @OneToMany (orphanRemoval = false, mappedBy = "roomType", fetch = FetchType.LAZY)
+    @OneToMany (orphanRemoval = true, mappedBy = "roomType", fetch = FetchType.LAZY)
     private List<Room> rooms;
-    @OneToMany (orphanRemoval = false, mappedBy = "roomType", fetch = FetchType.LAZY)
+    @OneToMany (orphanRemoval = true, mappedBy = "roomType", fetch = FetchType.LAZY)
     private List<BorrowRequest> requests;
 
     public int getRoomsCount(){

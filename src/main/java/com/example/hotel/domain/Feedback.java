@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Entity
@@ -30,4 +31,8 @@ public class Feedback {
     @NotBlank(message = "Текст не может быть пустым")
     private String text;
 
+    public String getLocalCreationDate(){
+        SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy");
+        return fmt.format(creationDate);
+    }
 }
